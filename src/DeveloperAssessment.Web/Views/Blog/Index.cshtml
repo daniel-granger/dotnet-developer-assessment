@@ -1,0 +1,81 @@
+﻿@model BlogPost
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container">
+    <div class="row">
+
+        <!-- Blog post content -->
+        <div class="col-lg-12">
+
+            <!-- Title -->
+            <h1 class="mt-4">@Model.Title</h1>
+
+            <hr>
+
+            <!-- Date/Time -->
+            <p>@(Model.Date.HasValue ? $"Posted on {Model.Date.Value.ToString("MMMM d, yyyy")}" : "Posted after the Big Bang")</p>
+
+            <hr>
+
+            <!-- Preview Image -->
+            <img class="img-fluid rounded" src="@Model.Image" alt="@Model.Title">
+
+            <hr>
+
+            <!-- Post Content -->
+            @Html.Raw(Model.HtmlContent)
+
+            <hr>
+
+            <!-- Blog post comment form -->
+            <div class="card my-4">
+                <h5 class="card-header">Leave a Comment:</h5>
+                <div class="card-body">
+                    <form>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="Name">Name</label>
+                                <input type="text" class="form-control" id="Name" placeholder="Name">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="EmailAddress">Email Address</label>
+                                <input type="email" class="form-control" id="EmailAddress" placeholder="Email Address">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Message">Message</label>
+                            <textarea id="Message" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Blog post comments -->
+            @if (Model.Comments is not null && Model.Comments.Any())
+            {
+                foreach(var Comment in Model.Comments)
+                {
+                    <div class="media mb-4">
+                        <img class="d-flex mr-3 rounded-circle user-avatar"
+                             src="https://eu.ui-avatars.com/api/?name=@(Comment.Name.Replace(" ", "+"))"
+                             alt="@Comment.Name">
+                        <div class="media-body">
+                            <h5 class="mt-0">@Comment.Name <small><em>@(Comment.Date.HasValue ? Comment.Date.Value.ToString("MMMM d, yyyy") : "Posted after the Big Bang")</em></small></h5>
+                            @Comment.Message
+                        </div>
+                    </div>
+                }
+            }
+            else 
+            {
+                <p><b>No comments yet - join the conversation!</b></p>
+            }
+
+        </div>
+    </div>
+</div>
