@@ -15,6 +15,6 @@ namespace DeveloperAssessment.Web.Models
         [JsonPropertyName("htmlContent")]
         public string HtmlContent { get; set; }
         [JsonPropertyName("comments")]
-        public List<Comment> Comments { get; set; }
+        public List<Comment> Comments { get; set; } = new();
     }
 }
