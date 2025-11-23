@@ -21,3 +21,9 @@ Works nicely.
 Currently forces a page refresh - would be nice to change this to a call via Fetch (TODO)
 Added a simple semaphore to limit concurrent writes to the JSON file.
 Noticed that JSON is written back with Unicode encoding for HTML characters - "safer" but discussions around policies for XSS would be needed in a real world app.
+
+## Adding Replies to Comments
+
+How big of a comment tree should we allow?
+We can keep the data structure the same as normal comments - maybe limit to 2 deep for formatting?
+In larger systems we absolutely could look at a "view more" option like social media sites do (Reddit) when trees get deep.
