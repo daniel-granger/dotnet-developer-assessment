@@ -1,17 +1,29 @@
 ﻿@model Comment
 
-<div class="media mb-4" id="comment-@Model.Id">
-    <img class="d-flex mr-3 rounded-circle user-avatar"
-         src="https://eu.ui-avatars.com/api/?name=@(Model.Name.Replace(" ", "+"))"
-         alt="@Model.Name">
-    <div class="media-body">
-        <h5 class="mt-0">@Model.Name <small><em>@(Model.Date.HasValue? Model.Date.Value.ToString("MMMM d, yyyy") : "Posted after the Big Bang")</em></small></h5>
-        @Model.Message
-    </div>
-    <button class="btn btn-sm btn-link pl-0 reply-btn" data-comment-id="@Model.Id" data-comment-name="@Model.Name">
-        Reply to this comment
-    </button>
+<style>
+    .comment-component {
+        border-radius: 0.5rem;
+        padding: 1rem;
+    }
+    .comment-component:hover, .comment-component:focus {
+        background-color: lightgrey;
+    }
+</style>
 
+<div class="media mb-4" id="comment-@Model.Id">
+    <div class="comment-component">
+        <img class="d-flex mr-3 rounded-circle user-avatar"
+             src="https://eu.ui-avatars.com/api/?name=@(Model.Name.Replace(" ", "+"))"
+             alt="@Model.Name">
+        <div class="media-body">
+            <h5 class="mt-0">@Model.Name <small><em>@(Model.Date.HasValue? Model.Date.Value.ToString("MMMM d, yyyy") : "Posted after the Big Bang")</em></small></h5>
+            @Model.Message
+        </div>
+        <button class="btn btn-sm btn-link pl-0 reply-btn" data-comment-id="@Model.Id" data-comment-name="@Model.Name">
+            Reply to this comment
+        </button>
+    </div>
+   
     <div class="replies-list ms-5" id="replies-@Model.Id">
         @if (Model.Replies is not null && Model.Replies.Any())
         {
