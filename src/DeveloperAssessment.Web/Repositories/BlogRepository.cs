@@ -9,27 +9,27 @@ namespace DeveloperAssessment.Web.Repositories
         private readonly IWebHostEnvironment _env;
         private readonly IMemoryCache _memoryCache;
         private const string CacheKey = "BlogPost_Cache";
+        private string _jsonFilePath { get; set; }
         public BlogRepository(IWebHostEnvironment env, IMemoryCache memoryCache)
         {
             _env = env;
             _memoryCache = memoryCache;
+            _jsonFilePath = Path.Combine(_env.ContentRootPath, "Data", "Blog-Posts.json");
         }
 
-        public async Task<List<BlogPost>> GetAllPostsAsync()
+        public async Task<List<BlogPost>> GetAllPostsAsync(bool force = false)
         {
-            if (!_memoryCache.TryGetValue(CacheKey, out List<BlogPost> blogPosts))
+            if (!_memoryCache.TryGetValue(CacheKey, out List<BlogPost> blogPosts) || force)
             {
                 // No cache hit, load data from JSON file.
 
-                var file = Path.Combine(_env.ContentRootPath, "Data", "Blog-Posts.json");
-
-                if (!File.Exists(file))
+                if (!File.Exists(_jsonFilePath))
                 {
                     // Invalid/missing file.
                     return new List<BlogPost>();
                 }
 
-                var res = await File.ReadAllTextAsync(file);
+                var res = await File.ReadAllTextAsync(_jsonFilePath);
 
                 var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -43,6 +43,37 @@ namespace DeveloperAssessment.Web.Repositories
             }
 
             return blogPosts;
+        }
+
+        public async Task AddCommentAsync(int postId, Comment comment)
+        {
+            var blogPosts = await GetAllPostsAsync(true); // Force reload to get the latest data
+
+            var post = blogPosts.FirstOrDefault(p => p.Id == postId);
+
+            if (post != null)
+            {
+                post.Comments.Add(comment);
+
+                BlogPostRoot root = new BlogPostRoot
+                {
+                    BlogPosts = blogPosts
+                };
+
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                var json = JsonSerializer.Serialize(root, options);
+
+                // Write to file
+                await File.WriteAllTextAsync(_jsonFilePath, json);
+
+                // Update cache with new data - saves another user needing to request this.
+                var cacheOptions = new MemoryCacheEntryOptions()
+                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+                _memoryCache.Set(CacheKey, blogPosts, cacheOptions);
+
+                var file = Path.Combine(_env.ContentRootPath, "Data", "Blog-Posts.json");
+                
+            }
         }
     }
 }
