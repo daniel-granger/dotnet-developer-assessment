@@ -44,7 +44,8 @@ namespace DeveloperAssessment.Web.Controllers
 
             return StatusCode(201, new
             {
-                html = htmlContent
+                html = htmlContent,
+                parentId
             });
         }
 

@@ -34,7 +34,14 @@
             <div class="card my-4">
                 <h5 class="card-header">Leave a Comment:</h5>
                 <div class="card-body">
-                    <form id="comment-form" method="POST" action="@Url.Action("AddComment", "Blog", new { id = Model.Id })"> 
+
+                    <div id="reply-context-box" class="alert alert-dark" style="display:none; position: relative;">
+                        <button type="button" class="btn-close" aria-label="Close" id="cancel-reply"></button>
+                        <strong>Replying to:</strong> <span id="reply-to-name"></span>
+                    </div>
+
+                    <form id="comment-form" method="POST" action="@Url.Action("AddComment", "Blog", new { id = Model.Id })">
+                        <input type="hidden" name="parentId" id="parentIdField" value="" />
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="Name">Name</label>
@@ -78,6 +85,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
+            // Submission of top-level comment form.
             document.getElementById('comment-form').addEventListener('submit', function (e) {
                 e.preventDefault();
 
@@ -94,15 +102,47 @@
                 })
                 .then(data => {
 
-                    // Create a new comment element
-                    var commentBox = document.querySelector('.comment-box');
+                    var appendLocation;
 
-                    commentBox.insertAdjacentHTML('beforeend', data.html);
+                    if (data.parentId != null) {
+                        appendLocation = document.getElementById('replies-' + data.parentId);
+                    } else {
+                        appendLocation = document.querySelector('.comment-box');
+                    }
+
+                    appendLocation.insertAdjacentHTML('beforeend', data.html);
                     
                     form.reset(); 
 
                 })
             });
+
+            var commentForm = document.getElementById('comment-form');
+            var contextBox = document.getElementById('reply-context-box');
+            var parentIdField = document.getElementById('parentIdField');
+            var replyToName = document.getElementById('reply-to-name');
+            var replyToPreview = document.getElementById('reply-to-preview');
+
+            document.body.addEventListener('click', function(e) {
+                if (e.target.classList.contains('reply-btn')) {
+                    var button = e.target;
+
+                    var id = button.getAttribute('data-comment-id');
+                    var name = button.getAttribute('data-comment-name');
+
+                    parentIdField.value = id;
+                    replyToName.innerText = name;
+
+                    contextBox.style.display = 'block';
+
+                    commentForm.scrollIntoView({ behavior: 'smooth' });
+                }
+                if (e.target.id === 'cancel-reply' || e.target.parentElement.id === 'cancel-reply') {
+                    parentIdField.value = '';
+                    contextBox.style.display = 'none';
+                    commentForm.reset();
+                }
+            })
 
         });
     </script>

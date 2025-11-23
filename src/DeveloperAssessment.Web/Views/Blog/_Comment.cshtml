@@ -8,17 +8,20 @@
         <h5 class="mt-0">@Model.Name <small><em>@(Model.Date.HasValue? Model.Date.Value.ToString("MMMM d, yyyy") : "Posted after the Big Bang")</em></small></h5>
         @Model.Message
     </div>
-    <button class="btn btn-sm btn-link pl-0 reply-btn" data-comment-id="@Model.Id">
+    <button class="btn btn-sm btn-link pl-0 reply-btn" data-comment-id="@Model.Id" data-comment-name="@Model.Name">
         Reply to this comment
     </button>
 
-    <div class="replies-list" id="replies-@Model.Id">
+    <div class="replies-list ms-5" id="replies-@Model.Id">
         @if (Model.Replies is not null && Model.Replies.Any())
         {
-            foreach (Comment reply in Model.Replies)
+            <div class="reply-wrapper mt-1">
+            @foreach (Comment reply in Model.Replies)
             {
+                
                 <partial name="_Comment" model="reply"></partial>
             }
+            </div>
         }
     </div>
 </div>
