@@ -27,3 +27,5 @@ Noticed that JSON is written back with Unicode encoding for HTML characters - "s
 How big of a comment tree should we allow?
 We can keep the data structure the same as normal comments - maybe limit to 2 deep for formatting?
 In larger systems we absolutely could look at a "view more" option like social media sites do (Reddit) when trees get deep.
+
+We need a way to uniquely ident. comments to tag replies to - will add a guid.
