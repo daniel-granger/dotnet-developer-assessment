@@ -46,7 +46,7 @@ namespace DeveloperAssessment.Web.Repositories
             return blogPosts;
         }
 
-        public async Task AddCommentAsync(int postId, Comment comment)
+        public async Task AddCommentAsync(int postId, Comment comment, string parentId)
         {
             // Relatively simple approach to avoid concurrency issues when writing to the file.
             await _fileLock.WaitAsync();
@@ -59,7 +59,25 @@ namespace DeveloperAssessment.Web.Repositories
 
                 if (post != null)
                 {
-                    post.Comments.Add(comment);
+
+                    if (!string.IsNullOrWhiteSpace(parentId))
+                    {
+                        var parentComment = FindCommentRecursive(post.Comments, parentId);
+                        if (parentComment != null)
+                        {
+                            parentComment.Replies.Add(comment);
+                        }
+                        else
+                        {
+                            // Parent comment not found
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        // Add as a top-level comment
+                        post.Comments.Add(comment);
+                    }
 
                     BlogPostRoot root = new BlogPostRoot
                     {
@@ -87,6 +105,25 @@ namespace DeveloperAssessment.Web.Repositories
             {
                 _fileLock.Release();
             }
+        }
+
+        private Comment FindCommentRecursive(List<Comment> comments, string targetId)
+        {
+            if (comments is null) return null;
+
+            foreach (var comment in comments)
+            {
+                if (comment.Id == targetId)
+                {
+                    return comment;
+                }
+                var foundInReplies = FindCommentRecursive(comment.Replies, targetId);
+                if (foundInReplies != null)
+                {
+                    return foundInReplies;
+                }
+            }
+            return null;
         }
     }
 }
