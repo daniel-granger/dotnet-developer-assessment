@@ -10,6 +10,7 @@ namespace DeveloperAssessment.Web.Repositories
         private readonly IMemoryCache _memoryCache;
         private const string CacheKey = "BlogPost_Cache";
         private string _jsonFilePath { get; set; }
+        private static readonly SemaphoreSlim _fileLock = new SemaphoreSlim(1, 1);
         public BlogRepository(IWebHostEnvironment env, IMemoryCache memoryCache)
         {
             _env = env;
@@ -47,32 +48,44 @@ namespace DeveloperAssessment.Web.Repositories
 
         public async Task AddCommentAsync(int postId, Comment comment)
         {
-            var blogPosts = await GetAllPostsAsync(true); // Force reload to get the latest data
+            // Relatively simple approach to avoid concurrency issues when writing to the file.
+            await _fileLock.WaitAsync();
 
-            var post = blogPosts.FirstOrDefault(p => p.Id == postId);
-
-            if (post != null)
+            try
             {
-                post.Comments.Add(comment);
+                var blogPosts = await GetAllPostsAsync(true); // Force reload to get the latest data
 
-                BlogPostRoot root = new BlogPostRoot
+                var post = blogPosts.FirstOrDefault(p => p.Id == postId);
+
+                if (post != null)
                 {
-                    BlogPosts = blogPosts
-                };
+                    post.Comments.Add(comment);
 
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(root, options);
+                    BlogPostRoot root = new BlogPostRoot
+                    {
+                        BlogPosts = blogPosts
+                    };
 
-                // Write to file
-                await File.WriteAllTextAsync(_jsonFilePath, json);
+                    var options = new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    };
+                    var json = JsonSerializer.Serialize(root, options);
 
-                // Update cache with new data - saves another user needing to request this.
-                var cacheOptions = new MemoryCacheEntryOptions()
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-                _memoryCache.Set(CacheKey, blogPosts, cacheOptions);
+                    // Write to file
+                    await File.WriteAllTextAsync(_jsonFilePath, json);
 
-                var file = Path.Combine(_env.ContentRootPath, "Data", "Blog-Posts.json");
-                
+                    // Update cache with new data - saves another user needing to request this.
+                    var cacheOptions = new MemoryCacheEntryOptions()
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+                    _memoryCache.Set(CacheKey, blogPosts, cacheOptions);
+
+                    var file = Path.Combine(_env.ContentRootPath, "Data", "Blog-Posts.json");
+                }
+            }
+            finally
+            {
+                _fileLock.Release();
             }
         }
     }
