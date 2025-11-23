@@ -1,0 +1,24 @@
+﻿@model Comment
+
+<div class="media mb-4" id="comment-@Model.Id">
+    <img class="d-flex mr-3 rounded-circle user-avatar"
+         src="https://eu.ui-avatars.com/api/?name=@(Model.Name.Replace(" ", "+"))"
+         alt="@Model.Name">
+    <div class="media-body">
+        <h5 class="mt-0">@Model.Name <small><em>@(Model.Date.HasValue? Model.Date.Value.ToString("MMMM d, yyyy") : "Posted after the Big Bang")</em></small></h5>
+        @Model.Message
+    </div>
+    <button class="btn btn-sm btn-link pl-0 reply-btn" data-comment-id="@Model.Id">
+        Reply to this comment
+    </button>
+
+    <div class="replies-list" id="replies-@Model.Id">
+        @if (Model.Replies is not null && Model.Replies.Any())
+        {
+            foreach (Comment reply in Model.Replies)
+            {
+                <partial name="_Comment" model="reply"></partial>
+            }
+        }
+    </div>
+</div>

@@ -1,15 +1,21 @@
 ﻿using DeveloperAssessment.Web.Models;
 using DeveloperAssessment.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewEngines;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace DeveloperAssessment.Web.Controllers
 {
     public class BlogController : Controller
     {
         private readonly IBlogService _blogService;
-        public BlogController(IBlogService blogService)
+        private readonly ICompositeViewEngine _viewEngine;
+        public BlogController(IBlogService blogService, ICompositeViewEngine viewEngine)
         {
             _blogService = blogService;
+            _viewEngine = viewEngine;
+
         }
 
         [Route("blog/{id:int}")]
@@ -33,14 +39,44 @@ namespace DeveloperAssessment.Web.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             await _blogService.AddCommentToPostAsync(id, comment, parentId);
+
+            string htmlContent = await RenderViewToStringAsync("_Comment", comment);
+
             return StatusCode(201, new
             {
-                id = comment.Id,
-                name = comment.Name,
-                date = comment.Date,
-                emailAddress = comment.EmailAddress,
-                message = comment.Message
+                html = htmlContent
             });
+        }
+
+        private async Task<string> RenderViewToStringAsync(string viewName, Comment model)
+        {
+            if (string.IsNullOrEmpty(viewName))
+                viewName = ControllerContext.ActionDescriptor.ActionName;
+
+            ViewData.Model = model;
+
+            using (var writer = new StringWriter())
+            {
+                IViewEngine viewEngine = _viewEngine;
+                ViewEngineResult viewResult = viewEngine.FindView(ControllerContext, viewName, false);
+
+                if (viewResult.Success == false)
+                {
+                    return $"A view with the name {viewName} could not be found";
+                }
+
+                ViewContext viewContext = new ViewContext(
+                    ControllerContext,
+                    viewResult.View,
+                    ViewData,
+                    TempData,
+                    writer,
+                    new HtmlHelperOptions()
+                );
+
+                await viewResult.View.RenderAsync(viewContext);
+                return writer.GetStringBuilder().ToString();
+            }
         }
     }
 }
