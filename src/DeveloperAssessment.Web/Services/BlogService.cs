@@ -18,11 +18,10 @@ namespace DeveloperAssessment.Web.Services
             return posts.FirstOrDefault(post => post.Id.HasValue && post.Id.Value == id) ?? new BlogPost();
         }
 
-        public async Task AddCommentToPostAsync(int postId, Comment comment)
+        public async Task AddCommentToPostAsync(int postId, Comment comment, string parentId = null)
         {
             comment.Date = DateTime.UtcNow;
-
-            await _blogRepository.AddCommentAsync(postId, comment);
+            await _blogRepository.AddCommentAsync(postId, comment, parentId);
         }
 
     }
