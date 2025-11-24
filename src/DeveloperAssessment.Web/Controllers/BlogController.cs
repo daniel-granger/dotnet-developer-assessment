@@ -11,11 +11,12 @@ namespace DeveloperAssessment.Web.Controllers
     {
         private readonly IBlogService _blogService;
         private readonly ICompositeViewEngine _viewEngine;
-        public BlogController(IBlogService blogService, ICompositeViewEngine viewEngine)
+        private readonly IWebHostEnvironment _env;
+        public BlogController(IBlogService blogService, ICompositeViewEngine viewEngine, IWebHostEnvironment env)
         {
             _blogService = blogService;
             _viewEngine = viewEngine;
-
+            _env = env;
         }
 
         [Route("blog/{id:int}")]
@@ -33,10 +34,32 @@ namespace DeveloperAssessment.Web.Controllers
 
         [HttpPost]
         [Route("blog/{id:int}/comment")]
-        public async Task<IActionResult> AddComment(int id, [FromForm] Comment comment, string? parentId = null)
+        public async Task<IActionResult> AddComment(int id, [FromForm] Comment comment, IFormFile? commentAttachment, string? parentId = null)
         {
 
             if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            if (commentAttachment != null && commentAttachment.Length > 0)
+            {
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "comment-attachments");
+
+                if (!Directory.Exists(uploadsFolder)) { Directory.CreateDirectory(uploadsFolder); }
+
+                // Get extension of filename
+                var ext = Path.GetExtension(commentAttachment.FileName).ToLowerInvariant();
+                
+                string uniqueFileName = Guid.NewGuid().ToString() + ext;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    await commentAttachment.CopyToAsync(fileStream);
+                }
+
+                comment.AttachmentPath = "/comment-attachments/" + uniqueFileName;
+                // Preserve the original file name to display to users
+                comment.AttachmentName = commentAttachment.FileName;
+            }
 
             await _blogService.AddCommentToPostAsync(id, comment, parentId);
 

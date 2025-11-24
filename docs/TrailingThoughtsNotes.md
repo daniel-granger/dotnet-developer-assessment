@@ -50,3 +50,11 @@ I wanted to explore the server rendering this, whilst the construction still occ
 I suppose where on page load, you get the type safety when initially constructing the comments, you lose that when adding new comments via JS, so keeping it consistent feels right.
 
 Practically, this wouldn't be easily scalable to large sites where users would like to render 1000s of new comments a second.
+
+## File Uploads
+
+- Basic File Uploads
+
+For this, we can store file uploads in wwwroot, so that they can be publically accessed and served by the web server.
+
+Real world considerations would be to store these in a CDN/S3/Blob Storage etc. for scalability, performance, security. Also Virus scanning (VirusTotal, ClamAV etc.) and file type validation.

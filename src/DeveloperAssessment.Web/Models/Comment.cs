@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace DeveloperAssessment.Web.Models
@@ -24,5 +25,12 @@ namespace DeveloperAssessment.Web.Models
         public string Message { get; set; }
         [JsonPropertyName("replies")]
         public List<Comment> Replies { get; set; } = new();
+
+        [ValidateNever]
+        [JsonPropertyName("attachmentPath")]
+        public string AttachmentPath { get; set; }
+        [ValidateNever]
+        [JsonPropertyName("attachmentName")]
+        public string AttachmentName { get; set; }
     }
 }
