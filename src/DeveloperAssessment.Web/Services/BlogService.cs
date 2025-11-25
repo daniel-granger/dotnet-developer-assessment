@@ -24,5 +24,24 @@ namespace DeveloperAssessment.Web.Services
             await _blogRepository.AddCommentAsync(postId, comment, parentId);
         }
 
+        public async Task<BlogListViewModel> GetPaginatedPostsAsync(int pageNumber, int pageSize)
+        {
+            var allPosts = await _blogRepository.GetAllPostsAsync();
+
+            var totalPosts = allPosts.Count();
+            var totalPages = (int)Math.Ceiling(totalPosts / (double)pageSize);
+
+            var paginatedPosts = allPosts
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+            return new BlogListViewModel
+            {
+                BlogPosts = paginatedPosts,
+                CurrentPage = pageNumber,
+                TotalPages = totalPages
+            };
+        }
+
     }
 }
