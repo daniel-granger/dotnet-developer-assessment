@@ -49,6 +49,16 @@ namespace DeveloperAssessment.Web.Controllers
             });
         }
 
+        [Route("blog")]
+        public async Task<IActionResult> List(int page = 1)
+        {
+            const int pageSize = 6;
+
+            BlogListViewModel model = await _blogService.GetPaginatedPostsAsync(page, pageSize);
+
+            return View("List", model);
+        }
+
         private async Task<string> RenderViewToStringAsync(string viewName, Comment model)
         {
             if (string.IsNullOrEmpty(viewName))
