@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Mvc.Controllers;
 
 namespace DeveloperAssessment.Web.Controllers
 {
@@ -88,6 +89,10 @@ namespace DeveloperAssessment.Web.Controllers
                 viewName = ControllerContext.ActionDescriptor.ActionName;
 
             ViewData.Model = model;
+
+            // Ensure RouteData and ActionDescriptor are available when tests construct a ControllerContext without them
+            ControllerContext.RouteData ??= new Microsoft.AspNetCore.Routing.RouteData();
+            ControllerContext.ActionDescriptor ??= new ControllerActionDescriptor { ActionName = "AddComment", ControllerName = "Blog" };
 
             using (var writer = new StringWriter())
             {
