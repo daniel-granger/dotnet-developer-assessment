@@ -1,0 +1,155 @@
+﻿@model BlogPost
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container">
+    <div class="row">
+
+        <!-- Blog post content -->
+        <div class="col-lg-12">
+
+            <!-- Title -->
+            <h1 class="mt-4">@Model.Title</h1>
+
+            <hr>
+
+            <!-- Date/Time -->
+            <p>@(Model.Date.HasValue ? $"Posted on {Model.Date.Value.ToString("MMMM d, yyyy")}" : "Posted after the Big Bang")</p>
+
+            <hr>
+
+            <!-- Preview Image -->
+            <img class="img-fluid rounded" src="@Model.Image" alt="@Model.Title">
+
+            <hr>
+
+            <!-- Post Content -->
+            @Html.Raw(Model.HtmlContent)
+
+            <hr>
+
+            <!-- Blog post comment form -->
+            <div class="card my-4">
+                <h5 class="card-header">Leave a Comment:</h5>
+                <div class="card-body">
+
+                    <div id="reply-context-box" class="alert alert-dark" style="display:none; position: relative;">
+                        <button type="button" class="btn-close" aria-label="Close" id="cancel-reply"></button>
+                        <strong>Replying to:</strong> <span id="reply-to-name"></span>
+                    </div>
+
+                    <form id="comment-form" method="POST" action="@Url.Action("AddComment", "Blog", new { id = Model.Id })">
+                        <input type="hidden" name="parentId" id="parentIdField" value="" />
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="Name">Name</label>
+                                <input type="text" class="form-control" id="Name" name="Name" placeholder="Name">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="EmailAddress">Email Address</label>
+                                <input type="email" class="form-control" id="EmailAddress" name="EmailAddress" placeholder="Email Address" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="Message">Message</label>
+                            <textarea id="Message" name="Message" class="form-control" rows="3" required></textarea>
+                        </div>
+
+                        <div class="form-group mt-2">
+                            <label for="commentAttachment" class="small text-muted">Attach a file</label>
+                            <input type="file" class="form-control-file" id="commentAttachment" name="commentAttachment">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary mt-2">Submit</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Blog post comments -->
+            <div class="comment-box">
+                @if (Model.Comments is not null && Model.Comments.Any())
+                {
+                    foreach(var Comment in Model.Comments)
+                    {
+                    <partial name="_Comment" model="Comment" />
+                    }
+                }
+                else 
+                {
+                    <p><b>No comments yet - join the conversation!</b></p>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Submission of top-level comment form.
+            document.getElementById('comment-form').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                var form = this;
+                var formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => {
+                    if (res.ok) { return res.json(); }
+                    else { throw new Error('Comment upload unsuccessful.'); }
+                })
+                .then(data => {
+
+                    var appendLocation;
+
+                    if (data.parentId != null) {
+                        appendLocation = document.getElementById('replies-' + data.parentId);
+                    } else {
+                        appendLocation = document.querySelector('.comment-box');
+                    }
+
+                    appendLocation.insertAdjacentHTML('beforeend', data.html);
+                    
+                    form.reset(); 
+
+                })
+            });
+
+            var commentForm = document.getElementById('comment-form');
+            var contextBox = document.getElementById('reply-context-box');
+            var parentIdField = document.getElementById('parentIdField');
+            var replyToName = document.getElementById('reply-to-name');
+            var replyToPreview = document.getElementById('reply-to-preview');
+
+            document.body.addEventListener('click', function(e) {
+                if (e.target.classList.contains('reply-btn')) {
+                    var button = e.target;
+
+                    var id = button.getAttribute('data-comment-id');
+                    var name = button.getAttribute('data-comment-name');
+
+                    parentIdField.value = id;
+                    replyToName.innerText = name;
+
+                    contextBox.style.display = 'block';
+
+                    commentForm.scrollIntoView({ behavior: 'smooth' });
+                }
+                if (e.target.id === 'cancel-reply' || e.target.parentElement.id === 'cancel-reply') {
+                    parentIdField.value = '';
+                    contextBox.style.display = 'none';
+                    commentForm.reset();
+                }
+            })
+
+        });
+    </script>
+}
